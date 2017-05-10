@@ -81,7 +81,7 @@ if __name__ == "__main__":
     timesegmentmatching_accuracy_evaluation_loo_cv(data_shared, win_size=6, method="SRM")
 
     dpsrm = DPSRM(n_features=50)
-    dpsrm.fit(np.array(train_data), n_iter=25)
+    dpsrm.fit(np.array(train_data))
     data_shared_dpsrm = dpsrm.transform(test_data)
     timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpsrm, win_size=6, method="DPSRM")
 
