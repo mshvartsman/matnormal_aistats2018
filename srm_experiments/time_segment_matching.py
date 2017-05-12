@@ -12,7 +12,7 @@ import numpy as np
 import brainiak.funcalign.srm
 from scipy.stats import norm
 from brainiak.matnormal.dpsrm import DPSRM
-from brainiak.matnormal.srm_marg_em import DPMNSRM
+from brainiak.matnormal.srm_margw_em import DPMNSRM
 from brainiak.funcalign.srm import SRM
 from brainiak.matnormal.covs import CovAR1, CovDiagonal
 import logging
