@@ -10,6 +10,8 @@ from sklearn.neural_network import MLPClassifier
 import numpy as np
 import brainiak.funcalign.srm
 from brainiak.matnormal.dpsrm import DPSRM
+from brainiak.matnormal.srm_margw_em import DPMNSRM
+from brainiak.matnormal.covs import CovAR1, CovDiagonal
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -39,6 +41,11 @@ if __name__ == "__main__":
     # Run DPSRM with the same data
     dpsrm = DPSRM(n_features=50)
     dpsrm.fit(np.array(movie_data), n_iter=10)
+
+    # run DPMNSRM with the same data
+    dpmnsrm = DPMNSRM(n_features=50, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1)
+    dpmnsrm.fit(np.array(movie_data), n_iter=10)
+
 
     # Load the input data that contains the image stimuli and its labels for training a classifier
     image_file = scipy.io.loadmat('%s/image_data.mat' % input_path)
@@ -73,6 +80,15 @@ if __name__ == "__main__":
     for subject in range(subjects):
         image_data_shared_dpsrm_orthow[subject] = stats.zscore(image_data_shared_dpsrm_orthow[subject], axis=1, ddof=1)
 
+    # project to shared space using dpsrm and zscore
+    image_data_shared_dpmnsrm = dpmnsrm.transform(image_data)
+    for subject in range(subjects):
+        image_data_shared_dpmnsrm[subject] = stats.zscore(image_data_shared_dpmnsrm[subject], axis=1, ddof=1)
+
+    # project to shared space using dpmnsrm with orthogonalized W and zscore
+    image_data_shared_dpmnsrm_orthow = dpmnsrm.transform_orthow(image_data)
+    for subject in range(subjects):
+        image_data_shared_dpmnsrm_orthow[subject] = stats.zscore(image_data_shared_dpmnsrm_orthow[subject], axis=1, ddof=1)
 
     # Read the labels of the image data for training the classifier.
     labels = scipy.io.loadmat('%s/label.mat' % input_path)
@@ -84,9 +100,13 @@ if __name__ == "__main__":
     accuracy = np.zeros((subjects,))
     accuracy_dpsrm = np.zeros((subjects,))
     accuracy_dpsrm_orthow = np.zeros((subjects,))
+    accuracy_dpmnsrm = np.zeros((subjects,))
+    accuracy_dpmnsrm_orthow = np.zeros((subjects,))
     probassigned = np.zeros((subjects,))
     probassigned_dpsrm = np.zeros((subjects,))
     probassigned_dpsrm_orthow = np.zeros((subjects,))
+    probassigned_dpmnsrm = np.zeros((subjects,))
+    probassigned_dpmnsrm_orthow = np.zeros((subjects,))
 
     for subject in range(subjects):
         # Concatenate the subjects' data for training into one matrix
@@ -96,12 +116,17 @@ if __name__ == "__main__":
         train_data = np.zeros((image_data_shared[0].shape[0], len(train_labels)))
         train_data_dpsrm = np.zeros((image_data_shared_dpsrm[0].shape[0], len(train_labels)))
         train_data_dpsrm_orthow = np.zeros((image_data_shared_dpsrm[0].shape[0], len(train_labels)))
+        train_data_dpmnsrm = np.zeros((image_data_shared_dpmnsrm[0].shape[0], len(train_labels)))
+        train_data_dpmnsrm_orthow = np.zeros((image_data_shared_dpmnsrm[0].shape[0], len(train_labels)))
+
         for train_subject in range(len(train_subjects)):
             start_index = train_subject*TRs
             end_index = start_index+TRs
             train_data[:, start_index:end_index] = image_data_shared[train_subjects[train_subject]]
             train_data_dpsrm[:, start_index:end_index] = image_data_shared_dpsrm[train_subjects[train_subject]]
             train_data_dpsrm_orthow[:, start_index:end_index] = image_data_shared_dpsrm_orthow[train_subjects[train_subject]]
+            train_data_dpmnsrm[:, start_index:end_index] = image_data_shared_dpmnsrm[train_subjects[train_subject]]
+            train_data_dpmnsrm_orthow[:, start_index:end_index] = image_data_shared_dpmnsrm_orthow[train_subjects[train_subject]]
 
         # Train a Nu-SVM classifier using scikit learn
         classifier = NuSVC(nu=0.5, kernel='linear')
@@ -118,8 +143,20 @@ if __name__ == "__main__":
         classifier_dpsrm_orthow = classifier_dpsrm_orthow.fit(train_data_dpsrm_orthow.T, train_labels)
         predicted_labels_dpsrm_orthow = classifier_dpsrm_orthow.predict(image_data_shared_dpsrm_orthow[subject].T)
         accuracy_dpsrm_orthow[subject] = sum(predicted_labels_dpsrm_orthow == test_labels)/float(len(predicted_labels_dpsrm_orthow))
+        
+        classifier_dpmnsrm = NuSVC(nu=0.5, kernel='linear')
+        classifier_dpmnsrm = classifier_dpmnsrm.fit(train_data_dpmnsrm.T, train_labels)
+        predicted_labels_dpmnsrm = classifier_dpmnsrm.predict(image_data_shared_dpmnsrm[subject].T)
+        accuracy_dpmnsrm[subject] = sum(predicted_labels_dpmnsrm == test_labels)/float(len(predicted_labels_dpmnsrm))
+
+        classifier_dpmnsrm_orthow = NuSVC(nu=0.5, kernel='linear')
+        classifier_dpmnsrm_orthow = classifier_dpmnsrm_orthow.fit(train_data_dpmnsrm_orthow.T, train_labels)
+        predicted_labels_dpmnsrm_orthow = classifier_dpmnsrm_orthow.predict(image_data_shared_dpmnsrm_orthow[subject].T)
+        accuracy_dpmnsrm_orthow[subject] = sum(predicted_labels_dpmnsrm_orthow == test_labels)/float(len(predicted_labels_dpsrm_orthow))
 
 
     print("SRM: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy), np.std(accuracy)))
-    print("MN-SRM: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpsrm), np.std(accuracy_dpsrm)))
-    print("MN-SRM with orthogonal W: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpsrm_orthow), np.std(accuracy_dpsrm_orthow)))
+    print("DPSRM: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpsrm), np.std(accuracy_dpsrm)))
+    print("DPSRM with orthogonal W: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpsrm_orthow), np.std(accuracy_dpsrm_orthow)))
+    print("DP-MN-SRM: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpmnsrm), np.std(accuracy_dpmnsrm)))
+    print("DP-MN-SRM with orthogonal W: The average accuracy among all subjects is {0:f} +/- {1:f}".format(np.mean(accuracy_dpmnsrm_orthow), np.std(accuracy_dpmnsrm_orthow)))
