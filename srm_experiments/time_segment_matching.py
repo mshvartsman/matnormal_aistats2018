@@ -39,8 +39,8 @@ def timesegmentmatching_accuracy_evaluation_loo_cv(data, win_size=6, method=""):
         for w in range(win_size):
             tst_data[w*ndim:(w+1)*ndim,:] = data[tst_subj][:,w:(w+nseg)]
 
-        A =  stats.zscore((trn_data - tst_data),axis=0, ddof=1)
-        B =  stats.zscore(tst_data,axis=0, ddof=1)
+        A = stats.zscore((trn_data - tst_data),axis=0, ddof=1)
+        B = stats.zscore(tst_data, axis=0, ddof=1)
 
         corr_mtx = B.T.dot(A)
 
@@ -49,7 +49,7 @@ def timesegmentmatching_accuracy_evaluation_loo_cv(data, win_size=6, method=""):
                 if abs(i-j)<win_size and i != j :
                     corr_mtx[i,j] = -np.inf
 
-        rank =  np.argmax(corr_mtx, axis=1)
+        rank = np.argmax(corr_mtx, axis=1)
         accu[tst_subj] = sum(rank == range(nseg)) / float(nseg)
     print(accu)
     print("%s: The average accuracy among all subjects is %.4f +/- %.4f" % (method, np.mean(accu), np.std(accu)))
@@ -82,9 +82,8 @@ if __name__ == "__main__":
 
     dpsrm = DPSRM(n_features=50)
     dpsrm.fit(np.array(train_data))
-    data_shared_dpsrm = dpsrm.transform(test_data)
+    data_shared_dpsrm = dpsrm.transform(test_data)    
     timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpsrm, win_size=6, method="DPSRM")
 
-    dpsrm.w_ = np.array([np.linalg.qr(w)[0] for w in dpsrm.w_])
-    data_shared_dpsrm_ortho = dpsrm.transform(test_data)
-    timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpsrm_ortho, win_size=6, method="DPSRM-Ortho")
+    data_shared_dpsrm_orthow = dpsrm.transform_orthow(test_data)
+    timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpsrm_orthow, win_size=6, method="DPSRM-Ortho")
