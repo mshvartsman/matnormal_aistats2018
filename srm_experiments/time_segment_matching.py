@@ -14,7 +14,8 @@ from scipy.stats import norm
 from brainiak.matnormal.dpsrm import DPSRM
 from brainiak.matnormal.srm_margw_em import DPMNSRM
 from brainiak.funcalign.srm import SRM
-from brainiak.matnormal.covs import CovAR1, CovDiagonal
+from brainiak.matnormal.dpmnsrm_orthos import DPMNSRM_OrthoS
+from brainiak.matnormal.covs import CovAR1, CovDiagonal, CovFullRankCholesky
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -97,3 +98,8 @@ if __name__ == "__main__":
 
     data_shared_dpmnsrm_orthow = dpmnsrm.transform_orthow(test_data)
     timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpmnsrm_orthow, win_size=6, method="DPMNSRM-Ortho")
+
+    dpmnsrm_orthos = DPMNSRM_OrthoS(n_features=50, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, w_cov=CovFullRankCholesky)
+    dpmnsrm_orthos.fit(np.array(train_data))
+    data_shared_dpmnsrm_orthos = dpmnsrm_orthos.transform(test_data)    
+    timesegmentmatching_accuracy_evaluation_loo_cv(data_shared_dpmnsrm_orthos, win_size=6, method="DPMNSRM-OrthoS")
