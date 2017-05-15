@@ -27,8 +27,8 @@ def dpsrm(train_data, test_data):
         train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
         test_data[subject] = stats.zscore(test_data[subject], axis=1, ddof=1)
 
-    model = DPMNSRM(max_iter=10, n_features=50)
-    model.fit(train_data)
+    model = DPMNSRM(n_features=50)
+    model.fit(train_data, max_iter=10)
     projected_data = srm.transform(test_data)
     # do not zscore outputs again though (why do this?)
     return projected_data
