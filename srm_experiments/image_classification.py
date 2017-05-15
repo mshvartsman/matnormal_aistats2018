@@ -6,12 +6,16 @@ import numpy as np
 import models
 import logging
 import pandas as pd
+from collections import OrderedDict
+from itertools import product
 logging.basicConfig(level=logging.INFO)
 
 input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
 outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_%i.csv'
 
-def run_experiment(modelname):
+def run_experiment(par):
+    model = getattr(models, par['model'])
+    
     # Load the input data that contains the movie stimuli for unsupervised training with SRM
     movie_file = scipy.io.loadmat('%s/movie_data.mat' % input_path)
     movie_data_left = movie_file['movie_data_lh']
@@ -40,9 +44,7 @@ def run_experiment(modelname):
 
     assert image_data[0].shape[0] == movie_data[0].shape[0], "Number of voxels in movie data and image data do not match!"
 
-    model = getattr(models, modelname)
-
-    transformed_data = model(movie_data, image_data)
+    transformed_data = model(movie_data, image_data, par['features'])
 
     # Read the labels of the image data for training the classifier.
     labels = scipy.io.loadmat('%s/label.mat' % input_path)
@@ -73,7 +75,12 @@ def run_experiment(modelname):
         accuracy[subject] = sum(predicted_labels == test_labels)/float(len(predicted_labels))
         train_acc[subject] = sum(classifier.predict(train_data.T) == train_labels)/float(len(train_labels))
 
-    return {'model': modelname, 'mean_acc': np.mean(accuracy), 'training_mean_acc': np.mean(train_acc), "std_acc": np.std(accuracy), "std_train_acc" : np.std(train_acc)}
+    return {'model': par['model'],
+            'features': par['features'],
+             'mean_acc': np.mean(accuracy),
+             'training_mean_acc': np.mean(train_acc),
+             'std_acc': np.std(accuracy),
+             'std_train_acc': np.std(train_acc)}
 
 if __name__ == "__main__":
 
@@ -86,13 +93,21 @@ if __name__ == "__main__":
 
     print("Job %s of %s reporting in!" % (myID, totalIDs))
 
-    pointsPerId = len(models.models) / totalIDs
-    start = (myID-1)*pointsPerId
-    end = len(models.models) if myID == totalIDs else (myID)*pointsPerId
-    print("Doing Params %s to %s (inclusive)" % (start, end-1))
-    my_models = models.models[int(start):int(end)]
+    runPars = OrderedDict([
+        ('model', models.models),
+        ('features',  [10, 30, 50])])
 
-    res = pd.DataFrame([run_experiment(model) for model in my_models])
+    # cartesian over param settings
+    allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
+              for p in product(*runPars.values()))]
+
+    pointsPerId = len(allpar) / totalIDs
+    start = (myID-1)*pointsPerId
+    end = len(allpar) if myID == totalIDs else (myID)*pointsPerId
+    print("Doing Params %s to %s (inclusive)" % (start, end-1))
+    mypar = allpar[int(start):int(end)]
+
+    res = pd.DataFrame([run_experiment(par) for par in mypar])
 
     fname = outfile_template % myID
 
