@@ -29,7 +29,7 @@ def dpsrm(train_data, test_data):
 
     model = DPMNSRM(n_features=50)
     model.fit(train_data, max_iter=10)
-    projected_data = srm.transform(test_data)
+    projected_data = model.transform(test_data)
     # do not zscore outputs again though (why do this?)
     return projected_data
 

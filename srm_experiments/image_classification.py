@@ -73,7 +73,7 @@ def run_experiment(modelname):
         accuracy[subject] = sum(predicted_labels == test_labels)/float(len(predicted_labels))
         train_acc[subject] = sum(classifier.predict(train_data.T) == train_labels)/float(len(train_labels))
 
-    return {'mean_acc': np.mean(accuracy), 'training_mean_acc': np.mean(train_acc), "std_acc": np.std(accuracy), "std_train_acc" : np.std(train_acc)}
+    return {'model': modelname, 'mean_acc': np.mean(accuracy), 'training_mean_acc': np.mean(train_acc), "std_acc": np.std(accuracy), "std_train_acc" : np.std(train_acc)}
 
 if __name__ == "__main__":
 
