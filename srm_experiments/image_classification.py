@@ -1,6 +1,6 @@
 ## heavily based on SRM brainiak example
 import scipy.io
-from scipy import stats
+import os
 from sklearn.svm import NuSVC
 import numpy as np
 import models
