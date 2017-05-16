@@ -4,8 +4,8 @@ from itertools import product
 import numpy as np
 from run_rsa import run_experiment
 
-input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/resting_state/'
-outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/resting_state/results_%s_s%i.csv'
+input_path = '/home/ms44/nips2017_data/resting_state'
+outfile_template = '/home/ms44/nips2017_data/resting_state/results/results_%s_s%i'
 
 if __name__ == "__main__":
 
