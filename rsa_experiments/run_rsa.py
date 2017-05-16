@@ -20,16 +20,19 @@ def run_experiment(par, input_path, outfile_template):
         return
 
     if par['method'] == "naive":
+        print("Running Naive RSA on subject %i!" % par['subj_num'])
         data = stats.zscore(data, axis=1, ddof=1)  
         m = LinearRegression(fit_intercept=False)
         m.fit(design, data.T)
         C = np.corrcoef(m.coef_.T)
     elif par['method'] == 'brsa':
+        print("Running BRSA on subject %i!" % par['subj_num'])
         data = stats.zscore(data, axis=1, ddof=1)  
         m = BRSA(n_nureg=15)
         m.fit(X=data.T, design=design)
         C = cov2corr(m.U_)
     elif par['method'] == 'mnrsa':
+        print("Running MNRSA on subject %i!" % par['subj_num'])
         # For mnrsa, zscore the whole thing but not by voxel
         # so that different voxels get to have different variances
         # but we don't blow out numerically
