@@ -108,11 +108,14 @@ if __name__ == "__main__":
     start = (myID-1)*pointsPerId
     end = len(allpar) if myID == totalIDs else (myID)*pointsPerId
     print("Doing Params %s to %s (inclusive)" % (start, end-1))
-    mypar = allpar[int(start):int(end)]
+    # mypar = allpar[int(start):int(end)]
 
-    res = pd.DataFrame([run_experiment(par) for par in mypar])
-
-    fname = outfile_template % myID
-
-    res.to_csv(fname)
+    for parnum in range(start, end):
+        res = pd.DataFrame([run_experiment(allpar[parnum])])
+        fname = outfile_template % parnum
+        res.to_csv(fname)
+        
     print("Done!")
+
+    
+
