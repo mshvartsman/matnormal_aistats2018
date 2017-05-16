@@ -7,6 +7,6 @@
 #SBATCH --array=1-24
 
 module load python/3.6
-source activate tf
+source activate tf-new
 
 python /usr/people/ms44/repos/matnormal_nips2017/srm_experiments/image_classification_raider.py
