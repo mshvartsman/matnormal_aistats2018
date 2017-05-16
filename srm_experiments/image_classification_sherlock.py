@@ -34,8 +34,6 @@ def run_experiment(par):
     transformed_data = np.array([td.T for td in transformed_data])
     # Read the labels of the image data for training the classifier.
     labels = np.array(pickle.load(open("%s/label.pickle" % input_path, 'rb')))
-    
-    test_obs_per_subj = np.array([l.shape[0] for l in labels])
 
     # Run a leave-one-out cross validation with the subjects
     accuracy = np.zeros((subjects,))
