@@ -50,7 +50,7 @@ def dpsrm_orthos_ecm(train_data, test_data, n_features):
         train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
         test_data[subject] = stats.zscore(test_data[subject], axis=1, ddof=1)
 
-    model = DPMNSRM(n_features=n_features, s_constraint="ortho", marg_cov=CovFullRankCholesky)
+    model = DPMNSRM(n_features=n_features, s_constraint="ortho", w_cov=CovFullRankCholesky)
     model.fit(train_data, max_iter=3)
     projected_data = model.transform(test_data)
     return projected_data
@@ -72,7 +72,7 @@ def dpmnsrm_orthos_ecm(train_data, test_data, n_features):
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
 
-    model = DPMNSRM(n_features=n_features, row_cov=CovDiagonal, col_cov=CovAR1, s_constraint="ortho", marg_cov=CovFullRankCholesky)
+    model = DPMNSRM(n_features=n_features, row_cov=CovDiagonal, col_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky)
     model.fit(train_data, max_iter=3)
     projected_data = model.transform(test_data)
     # do not zscore outputs again though (why do this?)
@@ -85,7 +85,7 @@ def dpsrm_orthos_ecme(train_data, test_data, n_features):
         train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
         test_data[subject] = stats.zscore(test_data[subject], axis=1, ddof=1)
 
-    model = DPMNSRM(n_features=n_features, s_constraint="ortho", marg_cov=CovFullRankCholesky, algorithm="ECME")
+    model = DPMNSRM(n_features=n_features, s_constraint="ortho", w_cov=CovFullRankCholesky, algorithm="ECME")
     model.fit(train_data, max_iter=3)
     projected_data = model.transform(test_data)
     return projected_data
@@ -107,7 +107,7 @@ def dpmnsrm_orthos_ecme(train_data, test_data, n_features):
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
 
-    model = DPMNSRM(n_features=n_features, row_cov=CovDiagonal, col_cov=CovAR1, s_constraint="ortho", marg_cov=CovFullRankCholesky, algorithm="ECME")
+    model = DPMNSRM(n_features=n_features, row_cov=CovDiagonal, col_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky, algorithm="ECME")
     model.fit(train_data, max_iter=3)
     projected_data = model.transform(test_data)
     # do not zscore outputs again though (why do this?)
