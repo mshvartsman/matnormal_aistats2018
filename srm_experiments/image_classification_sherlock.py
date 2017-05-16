@@ -12,15 +12,15 @@ from collections import OrderedDict
 from itertools import product
 logging.basicConfig(level=logging.INFO)
 
-# input_path = '/fastscratch/ms44/nips2017_data/raider'
-# outfile_template = '/fastscratch/ms44/nips2017_data/raider/results_%i.csv'
+input_path = '/fastscratch/ms44/nips2017_data/sherlock'
+outfile_path = '/home/ms44/nips2017_data/sherlock/results'
 
-input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
-outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results_%i.csv'
+# input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
+# outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results_%i.csv'
 
 def run_experiment(par):
     model = getattr(models, par['model'])
-    
+
     # Load the input data that contains the movie stimuli for unsupervised training with SRM
     movie_data = np.load('%s/sherlock_pmc_813vox.npy'%input_path)
     movie_data = movie_data.astype(np.float64, copy=True)
@@ -96,8 +96,10 @@ if __name__ == "__main__":
     # mypar = allpar[start:end]
 
     for parnum in range(start, end):
-        fname = outfile_template % parnum
+        mypar = allpar[parnum]        
+        fname = '%s/results_%s_%ifeatures' % (outfile_path, mypar['model'], mypar['features'])
         if Path(fname).exists(): 
+            print("Found %s, skipping" % fname)
             continue 
         else:
             res = pd.DataFrame([run_experiment(allpar[parnum])])
