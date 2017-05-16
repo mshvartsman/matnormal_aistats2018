@@ -7,12 +7,12 @@ from scipy import stats
 # ECME not done for DPSRM since all updates are analytic
 models = ['srm',
           'dpsrm_ecm',
-          'dpsrm_orthos_ecm',
-          'dpsrm_orthos_ecme',
-          'dpmnsrm_orthos_ecm',
-          'dpmnsrm_orthos_ecme',
-          'dpmnsrm_orthos_ecm',
-          'dpmnsrm_orthos_ecme']
+          # 'dpsrm_orthos_ecm',
+          # 'dpsrm_orthos_ecme',
+          'dpmnsrm_ecm',
+          'dpmnsrm_ecme']#,
+          # 'dpmnsrm_orthos_ecm',
+          # 'dpmnsrm_orthos_ecme']
 
 def srm(train_data, test_data, n_features):
     # Z-score the data
