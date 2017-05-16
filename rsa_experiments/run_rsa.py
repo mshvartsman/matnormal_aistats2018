@@ -52,6 +52,6 @@ def run_experiment(par, input_path, outfile_template):
         model.fit(data.T, design)
         C = model.C_
 
-        savemat(fname, {'C':C, 'method':par['method'], 'subject':par['subj_num']})
+    savemat(fname, {'C':C, 'method':par['method'], 'subject':par['subj_num']})
 
-        return
+    return
