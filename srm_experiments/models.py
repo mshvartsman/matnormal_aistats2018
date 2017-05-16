@@ -60,6 +60,10 @@ def dpmnsrm_ecm(train_data, test_data, n_features):
 
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
+    # but do rescale so that we don't get numeric problems
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=None, ddof=1)
+        test_data[subject] = stats.zscore(test_data[subject], axis=None, ddof=1)
 
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1)
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
@@ -71,6 +75,11 @@ def dpmnsrm_orthos_ecm(train_data, test_data, n_features):
 
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
+    # but do rescale so that we don't get numeric problems
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=None, ddof=1)
+        test_data[subject] = stats.zscore(test_data[subject], axis=None, ddof=1)
+
 
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky)
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
@@ -95,6 +104,11 @@ def dpmnsrm_ecme(train_data, test_data, n_features):
 
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
+    # but do rescale so that we don't get numeric problems
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=None, ddof=1)
+        test_data[subject] = stats.zscore(test_data[subject], axis=None, ddof=1)
+
 
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, algorithm="ECME")
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
@@ -106,6 +120,11 @@ def dpmnsrm_orthos_ecme(train_data, test_data, n_features):
 
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
+    # but do rescale so that we don't get numeric problems
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=None, ddof=1)
+        test_data[subject] = stats.zscore(test_data[subject], axis=None, ddof=1)
+
 
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky, algorithm="ECME")
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
