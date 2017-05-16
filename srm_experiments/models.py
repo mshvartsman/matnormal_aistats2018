@@ -39,7 +39,11 @@ def dpsrm_ecm(train_data, test_data, n_features):
     model = DPMNSRM(n_features=n_features)
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(test_data)
-    # do not zscore outputs again though (why do this?)
+    
+    # if SRM does it maybe we do it too? still no idea why it should help
+    for subject in range(n):
+        projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
+
     return projected_data
 
 
@@ -68,7 +72,11 @@ def dpmnsrm_ecm(train_data, test_data, n_features):
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1)
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(test_data)
-    # do not zscore outputs again though (why do this?)
+    
+    # if SRM does it maybe we do it too? still no idea why it should help
+    for subject in range(n):
+        projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
+
     return projected_data
 
 def dpmnsrm_orthos_ecm(train_data, test_data, n_features):
@@ -84,7 +92,11 @@ def dpmnsrm_orthos_ecm(train_data, test_data, n_features):
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky)
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(test_data)
-    # do not zscore outputs again though (why do this?)
+    
+    # if SRM does it maybe we do it too? still no idea why it should help
+    for subject in range(n):
+        projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
+
     return projected_data
 
 def dpsrm_orthos_ecme(train_data, test_data, n_features):
@@ -113,7 +125,11 @@ def dpmnsrm_ecme(train_data, test_data, n_features):
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, algorithm="ECME")
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(test_data)
-    # do not zscore outputs again though (why do this?)
+    
+    # if SRM does it maybe we do it too? still no idea why it should help
+    for subject in range(n):
+        projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
+
     return projected_data
 
 def dpmnsrm_orthos_ecme(train_data, test_data, n_features):
@@ -129,7 +145,11 @@ def dpmnsrm_orthos_ecme(train_data, test_data, n_features):
     model = DPMNSRM(n_features=n_features, space_noise_cov=CovDiagonal, time_noise_cov=CovAR1, s_constraint="ortho", w_cov=CovFullRankCholesky, algorithm="ECME")
     model.fit(train_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(test_data)
-    # do not zscore outputs again though (why do this?)
+    
+    # if SRM does it maybe we do it too? still no idea why it should help
+    for subject in range(n):
+        projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
+
     return projected_data
 
 
