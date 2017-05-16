@@ -3,6 +3,7 @@ import scipy.io
 import os
 from sklearn.svm import NuSVC
 import numpy as np
+from pathlib import Path
 import models
 import logging
 import pandas as pd
@@ -111,9 +112,12 @@ if __name__ == "__main__":
     # mypar = allpar[start:end]
 
     for parnum in range(start, end):
-        res = pd.DataFrame([run_experiment(allpar[parnum])])
         fname = outfile_template % parnum
-        res.to_csv(fname)
+        if Path(fname).exists(): 
+            continue 
+        else:
+            res = pd.DataFrame([run_experiment(allpar[parnum])])
+            res.to_csv(fname)
 
     print("Done!")
 
