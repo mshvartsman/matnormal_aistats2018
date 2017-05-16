@@ -4,6 +4,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=ms44@princeton.edu
 #SBATCH -t 0-24:00 # (D-HH:MM)
-#SBATCH --array=1-27
+#SBATCH --array=1-24
 
-python3 /usr/people/ms44/repos/matnormal_nips2017/srm_experiments/image_classification_raider.py
+module load python/3.6
+source activate tf
+
+python /usr/people/ms44/repos/matnormal_nips2017/srm_experiments/image_classification_raider.py
