@@ -9,9 +9,15 @@ from scipy import stats
 
 import numpy as np
 
+
 def run_experiment(par, input_path, outfile_template):
     mat = loadmat('%s/data_for_experiment.mat' % input_path)
     design = mat['design']
+
+    # if we have diff design by subj: 
+    if design.ndim == 3:
+        design = design[par['subj_num']]
+
     data = mat['fmri'][0][par['subj_num']]
 
     fname = outfile_template % (par['method'], par['subj_num'])
