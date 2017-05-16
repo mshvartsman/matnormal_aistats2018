@@ -10,11 +10,11 @@ from collections import OrderedDict
 from itertools import product
 logging.basicConfig(level=logging.INFO)
 
-input_path = '/fastscratch/ms44/nips2017_data/raider'
-outfile_template = '/fastscratch/ms44/nips2017_data/raider/results_%i.csv'
+# input_path = '/fastscratch/ms44/nips2017_data/raider'
+# outfile_template = '/fastscratch/ms44/nips2017_data/raider/results_%i.csv'
 
-# input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
-# outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_%i.csv'
+input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
+outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_%i.csv'
 
 def run_experiment(par):
     model = getattr(models, par['model'])
@@ -105,17 +105,15 @@ if __name__ == "__main__":
               for p in product(*runPars.values()))]
 
     pointsPerId = len(allpar) / totalIDs
-    start = (myID-1)*pointsPerId
-    end = len(allpar) if myID == totalIDs else (myID)*pointsPerId
+    start = int((myID-1)*pointsPerId)
+    end = int(len(allpar) if myID == totalIDs else (myID)*pointsPerId)
     print("Doing Params %s to %s (inclusive)" % (start, end-1))
-    # mypar = allpar[int(start):int(end)]
+    # mypar = allpar[start:end]
 
     for parnum in range(start, end):
         res = pd.DataFrame([run_experiment(allpar[parnum])])
         fname = outfile_template % parnum
         res.to_csv(fname)
-        
-    print("Done!")
 
-    
+    print("Done!")
 
