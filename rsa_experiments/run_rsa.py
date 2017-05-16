@@ -9,12 +9,12 @@ from scipy import stats
 
 import numpy as np
 
-def run_experiment(par):
-    mat = loadmat('%s/data_for_experiment.mat' % par['input_path'])
+def run_experiment(par, input_path, outfile_template):
+    mat = loadmat('%s/data_for_experiment.mat' % input_path)
     design = mat['design']
     data = mat['fmri'][0][par['subj_num']]
 
-    fname = par['outfile_template'] % (par['method'], par['subj_num'])
+    fname = outfile_template % (par['method'], par['subj_num'])
 
     if Path(fname).exists():
         return

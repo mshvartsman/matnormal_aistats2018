@@ -20,9 +20,7 @@ if __name__ == "__main__":
 
     runPars = OrderedDict([
         ('method', ['naive','brsa','mnrsa']),
-        ('subj_num',  np.arange(6)),
-        ('input_path', input_path),
-        ('outfile_template', outfile_template)])
+        ('subj_num',  np.arange(6))])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
@@ -34,6 +32,6 @@ if __name__ == "__main__":
     print("Doing Params %s to %s (inclusive)" % (start, end-1))
 
     for parnum in range(start, end):
-        run_experiment(allpar[parnum])
+        run_experiment(allpar[parnum], input_path, outfile_template)
 
     print("Done!")
