@@ -12,7 +12,7 @@ from collections import OrderedDict
 from itertools import product
 logging.basicConfig(level=logging.INFO)
 
-input_path = '/fastscratch/ms44/nips2017_data/sherlock'
+input_path = '/home/ms44/nips2017_data/sherlock'
 outfile_path = '/home/ms44/nips2017_data/sherlock/results'
 
 # input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
