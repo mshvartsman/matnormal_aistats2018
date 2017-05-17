@@ -1,10 +1,9 @@
 ## heavily based on SRM brainiak example
 import scipy.io
 import os
-from sklearn.svm import NuSVC
 import numpy as np
 from pathlib import Path
-import models
+import models_loo_reconstruction as models
 import logging
 import pandas as pd
 from collections import OrderedDict
