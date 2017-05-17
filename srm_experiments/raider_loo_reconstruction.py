@@ -10,11 +10,11 @@ from collections import OrderedDict
 from itertools import product
 logging.basicConfig(level=logging.INFO)
 
-# input_path = '/home/ms44/nips2017_data/raider'
-# outfile_path = '/home/ms44/nips2017_data/raider/results_loo_recon'
+input_path = '/home/ms44/nips2017_data/raider'
+outfile_path = '/home/ms44/nips2017_data/raider/results_loo_recon'
 
-input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
-outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_loo_recon'
+# input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
+# outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_loo_recon'
 
 def run_experiment(par):
     model = getattr(models, par['model'])
