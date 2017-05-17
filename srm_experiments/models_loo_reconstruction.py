@@ -25,7 +25,7 @@ def rmse(x, xtrue):
     return np.sqrt(np.average((x-xtrue)**2))
 
 def relative_mse(x, xtrue):
-    return np.sum((x-xtrue)**2) / np.sum(xtrue)
+    return np.sum((x-xtrue)**2) / np.sum(xtrue**2)
 
 
 def srm(train_data, test_data, n_features):
