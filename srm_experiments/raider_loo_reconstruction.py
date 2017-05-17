@@ -38,12 +38,13 @@ def run_experiment(par):
 
     test_data = np.concatenate([movie_data_left[:, :, par['held_out_subj']], movie_data_right[:, :, par['held_out_subj']]], axis=0)
 
-    err = model(train_data, test_data, par['features'])
+    root_mse, relative_mse = model(train_data, test_data, par['features'])
 
     return {'model': par['model'],
             'features': par['features'],
             'subject': par['held_out_subj'],
-            'rmse': err}
+            'root_mse': root_mse,
+            'relative_mse': relative_mse}
 
 if __name__ == "__main__":
 

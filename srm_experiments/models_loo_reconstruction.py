@@ -24,6 +24,10 @@ def dpmnsrm_wposterior(X, model):
 def rmse(x, xtrue):
     return np.sqrt(np.average((x-xtrue)**2))
 
+def relative_mse(x, xtrue):
+    return np.sum((x-xtrue)**2) / np.sum(xtrue)
+
+
 def srm(train_data, test_data, n_features):
     # Z-score the data
     n = len(train_data)
@@ -40,7 +44,7 @@ def srm(train_data, test_data, n_features):
     u, s, v = np.linalg.svd(a_new + perturbation, full_matrices=False)
     w_new = u.dot(v)
 
-    return rmse(w_new.dot(model.s_), test_data)
+    return rmse(w_new.dot(model.s_), test_data), relative_mse(w_new.dot(model.s_), test_data)
 
 def dpsrm_ecm(train_data, test_data, n_features):
     # Z-score the data since we're not modeling noise variance
@@ -55,7 +59,7 @@ def dpsrm_ecm(train_data, test_data, n_features):
 
     w_new = dpmnsrm_wposterior(test_data, model)
 
-    return rmse(w_new.dot(model.s_), test_data)
+    return rmse(w_new.dot(model.s_), test_data), relative_mse(w_new.dot(model.s_), test_data)
 
 def dpmnsrm_ecm(train_data, test_data, n_features):
 
@@ -71,7 +75,7 @@ def dpmnsrm_ecm(train_data, test_data, n_features):
     model.fit(train_data, max_iter=10, convergence_tol=1e-5)
     w_new = dpmnsrm_wposterior(test_data, model)
 
-    return rmse(w_new.dot(model.s_), test_data)
+    return rmse(w_new.dot(model.s_), test_data), relative_mse(w_new.dot(model.s_), test_data)
 
 def dpmnsrm_ecme(train_data, test_data, n_features):
 
@@ -87,7 +91,7 @@ def dpmnsrm_ecme(train_data, test_data, n_features):
     model.fit(train_data, max_iter=10, convergence_tol=1e-5)
     w_new = dpmnsrm_wposterior(test_data, model)
 
-    return rmse(w_new.dot(model.s_), test_data)
+    return rmse(w_new.dot(model.s_), test_data), relative_mse(w_new.dot(model.s_), test_data)
 
 # def hyperalignment(train_data, test_data, n_features):
 #     from mvpa2.suite import Hyperalignment
