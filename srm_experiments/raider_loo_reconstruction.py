@@ -42,6 +42,7 @@ def run_experiment(par):
 
     return {'model': par['model'],
             'features': par['features'],
+            'subject': par['held_out_subj'],
             'rmse': err}
 
 if __name__ == "__main__":
