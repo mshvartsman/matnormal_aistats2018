@@ -33,7 +33,7 @@ def run_experiment(par):
     allsubj = list(range(subjects))
     allsubj.remove(par['held_out_subj'])
 
-    for s in range(subjects):
+    for s in allsubj:
         train_data.append(np.concatenate([movie_data_left[:, :, s], movie_data_right[:, :, s]], axis=0))
 
     test_data = np.concatenate([movie_data_left[:, :, par['held_out_subj']], movie_data_right[:, :, par['held_out_subj']]], axis=0)
