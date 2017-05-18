@@ -35,7 +35,7 @@ def srm(train_data, n_features):
     model2.fit(dset2)
     return norm_from_ortho(model1.s_, model2.s_)
 
-def dpsrm_ecm(train_data, test_data, n_features):
+def dpsrm_ecm(train_data, n_features):
     # Z-score the data since we're not modeling noise variance
     n = len(train_data)
     for subject in range(n):
@@ -54,7 +54,7 @@ def dpsrm_ecm(train_data, test_data, n_features):
     model2.fit(dset2)
     return norm_from_ortho(model1.s_, model2.s_)
 
-def dpmnsrm_ecm(train_data, test_data, n_features):
+def dpmnsrm_ecm(train_data, n_features):
 
     n = len(train_data)
     # no zscoring here, let the model figure out the informative voxels
