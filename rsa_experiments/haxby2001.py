@@ -5,7 +5,7 @@ import numpy as np
 from run_rsa import run_experiment
 
 input_path = '/home/ms44/nips2017_data/haxby2001'
-outfile_template = '/home/ms44/nips2017_data/haxby2001/results/results_%s_s%i.csv'
+outfile_path = '/home/ms44/nips2017_data/haxby2001/results'
 
 if __name__ == "__main__":
 
@@ -33,6 +33,6 @@ if __name__ == "__main__":
     print("Doing Params %s to %s (inclusive)" % (start, end-1))
 
     for parnum in range(start, end):
-        run_experiment(allpar[parnum], input_path, outfile_template)
+        run_experiment(allpar[parnum], input_path, outfile_path)
 
     print("Done!")
