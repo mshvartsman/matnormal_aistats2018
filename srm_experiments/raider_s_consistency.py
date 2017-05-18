@@ -32,7 +32,7 @@ def run_experiment(par):
     for s in range(subjects):
         train_data.append(np.concatenate([movie_data_left[:, :, s], movie_data_right[:, :, s]], axis=0))
 
-    consistency_norm = model(train_data, par['features'])
+    consistency_norm = model(np.array(train_data), par['features'])
 
     return {'model': par['model'],
             'features': par['features'],
