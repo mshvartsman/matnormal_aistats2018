@@ -1,0 +1,236 @@
+---
+title: "Figures for matrix-normal NIPS paper"
+output: html_notebook
+---
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(plyr)
+```
+
+# Data sources
+```{r}
+result_folder_classification_raider <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/raider/results')
+
+result_folder_classification_sherlock <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/sherlock/results')
+
+result_folder_raider_loo <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/raider/results_loo_recon')
+result_folder_sherlock_loo <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/sherlock/results_loo_recon')
+
+result_folder_restingstate <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/resting_state/results')
+
+result_folder_haxby <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/haxby2001/results')
+
+```
+
+
+```{r}
+# fancy names
+names_from <- c("dpmnsrm_ecm",
+				"dpmnsrm_ecme",
+				"dpmnsrm_orthos_ecm",
+				"dpmnsrm_orthos_ecme",
+				"dpsrm_ecm",
+				"dpsrm_orthos_ecm",
+				"srm")
+names_to <- c("DP-MNSRM",
+			 "DP-MNSRM (ECME)",
+			 "DP-MNSRM (Orth. S)",
+			 "DP-MNSRM (ECME, Orth. S)",
+			 "DP-SRM",
+			 "DP-SRM (Ortho. S)",
+			  "SRM")
+
+include_models <- c('dpmnsrm_ecm', 'dpsrm_ecm', 'srm')
+```
+
+# SRM Classification
+
+```{r}
+res_files_raider <- dir(result_folder_classification_raider, full.names=T, pattern="results*")
+res_files_sherlock <- dir(result_folder_classification_sherlock, full.names=T, pattern="results*")
+
+res_raider <- rbindlist(llply(res_files_raider, fread))
+res_raider[,chance_level:=1/7]
+res_sherlock <- rbindlist(llply(res_files_sherlock, fread))
+res_sherlock[,chance_level:=1/49]
+res_raider[,experiment:="raider"]
+res_sherlock[,experiment:="sherlock"]
+allres <- rbind(res_raider, res_sherlock)
+allres <- allres[model %in% include_models]
+```
+```{r}
+allres[,n_subj:=NA][experiment=='sherlock',n_subj:=16][experiment=='raider',n_subj:=10]
+allres[,se_acc:=std_acc/sqrt(n_subj)]
+allres[,fancy_names:=mapvalues(model, names_from, names_to)]
+
+p <- ggplot(allres, aes(x=factor(features), y=mean_acc, ymin=mean_acc-std_acc, ymax=mean_acc+std_acc, group=fancy_names, fill=fancy_names)) + geom_bar(stat="identity", position=position_dodge()) +
+	geom_linerange(position=position_dodge(width=0.9), colour="gray") + theme_bw(base_size=10) + 
+	geom_hline(aes(yintercept=chance_level), linetype="dashed") + 
+	scale_fill_brewer("Method", type = "qual") + facet_wrap(~experiment, scales="free")
+	labs(x="Features", y="Accuracy", title="Classification performance") 
+
+print(p)
+ggsave(filename="./classification.pdf", plot=p, width=4, height=5)
+```
+
+# SRM Reconstruction
+
+```{r}
+
+res_files_raider_loo <- dir(result_folder_raider_loo, full.names=T, pattern="*.csv")
+res_files_sherlock_loo <- dir(result_folder_sherlock_loo, full.names=T, pattern="*.csv")
+
+res_raider_loo <- rbindlist(llply(res_files_raider_loo, fread))
+res_raider_loo[,experiment:='raider']
+res_sherlock_loo <- rbindlist(llply(res_files_sherlock_loo, fread))
+res_sherlock_loo[,experiment:='sherlock']
+res_loo <- rbind(res_raider_loo, res_sherlock_loo)
+res_loo[,fancy_names:=mapvalues(model, names_from, names_to)]
+
+p <- ggplot(res_loo, aes(x=factor(features), y=root_mse, group=fancy_names, colour=fancy_names)) +
+	  stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.9)) +
+	  scale_color_brewer("Method", type = "qual") + labs(x="Features", y="Root MSE", title="Reconstruction performance")  + facet_wrap(~experiment)+ theme_bw(base_size=12)
+p
+ggsave(filename="./reconstruction_root_mse.pdf", plot=p, width=4, height=5)
+```
+
+```{r}
+p <- ggplot(res_loo, aes(x=factor(features), y=relative_mse, group=fancy_names, colour=fancy_names)) +
+	  stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.9)) +
+	  scale_color_brewer("Method", type = "qual") + labs(x="Features", y="Relative MSE", title="Reconstruction performance") + facet_wrap(~experiment) + theme_bw(base_size=12)
+p
+ggsave(filename="./reconstruction_relative_mse.pdf", plot=p, width=4, height=5)
+```
+
+# RSA on null (resting state)
+
+```{r}
+res_files_rsanull <- dir(result_folder_restingstate, full.names=T, pattern="*.mat")
+all_null_rsa_mats <- llply(res_files_rsanull, readMat)
+```
+
+```{r}
+rsa_mats_naive <- array(dim=c(16,16,29))
+rsa_mats_brsa <-array(dim=c(16,16,29))
+rsa_mats_mnrsa <- array(dim=c(16,16,29))
+i <- j <- k <- 1
+for (m in all_null_rsa_mats){
+  if (m$method == "naive"){
+    rsa_mats_naive[,,i] <- m$C
+    i <- i + 1
+  } else if(m$method == "brsa"){
+  rsa_mats_brsa[,,j] <- m$C
+    j <- j + 1
+} else if(m$method == "mnrsa"){
+  rsa_mats_mnrsa[,,k] <- m$C
+    k <- k + 1
+  }
+}
+
+grandmean_naive <- apply(rsa_mats_naive, c(1,2), mean)
+grandmean_brsa <- apply(rsa_mats_brsa, c(1,2), mean)
+grandmean_mnrsa <- apply(rsa_mats_mnrsa, c(1,2), mean)
+grandmean_naive_long <- melt(grandmean_naive)
+grandmean_brsa_long <- melt(grandmean_brsa)
+grandmean_mnrsa_long <- melt(grandmean_mnrsa)
+
+p <- ggplot(grandmean_naive_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, resting state")
+p
+p <- ggplot(grandmean_brsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="BRSA average matrix, resting state")
+p
+p <- ggplot(grandmean_mnrsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="MN-RSA average matrix, resting state")
+p
+```
+
+```{r}
+n_subj <- 29
+tril_naive <- c()
+tril_brsa <- c()
+tril_mnrsa <- c()
+for (i in 1:n_subj){
+  tril_naive <- cbind(tril_naive, rsa_mats_naive[,,i][lower.tri(rsa_mats_naive[,,i])])
+tril_brsa <- cbind(tril_brsa, rsa_mats_brsa[,,i][lower.tri(rsa_mats_brsa[,,i])])
+  tril_mnrsa <- cbind(tril_mnrsa, rsa_mats_mnrsa[,,i][lower.tri(rsa_mats_mnrsa[,,i])])
+}
+tril_naive <- melt(tril_naive)
+colnames(tril_naive) <- c("elem", "subject", "correlation")
+tril_brsa <- melt(tril_brsa)
+colnames(tril_brsa) <- c("elem", "subject", "correlation")
+tril_mnrsa <- melt(tril_mnrsa)
+colnames(tril_mnrsa) <- c("elem", "subject", "correlation")
+tril_naive$method <-  "naive"
+tril_brsa$method <-  "brsa"
+tril_mnrsa$method <-  "mnrsa"
+tril_all <- rbind(tril_naive, tril_brsa, tril_mnrsa)
+p <- ggplot(tril_all, aes(x=method, y=correlation)) +geom_jitter(alpha=0.1) + geom_violin(alpha=0.5)+ labs(title="Distr. of correlations (resting state)")
+p
+```
+
+# RSA on signal (Haxby)
+
+```{r}
+res_files_haxby <- dir(result_folder_haxby, full.names=T, pattern="*.mat")
+all_haxby_rsa_mats <- llply(res_files_haxby, readMat)
+```
+
+```{r}
+n_subj <- 6
+n_features <- 8
+
+rsa_mats_naive <- array(dim=c(n_features,n_features,n_subj))
+rsa_mats_brsa <-array(dim=c(n_features,n_features,n_subj))
+rsa_mats_mnrsa <- array(dim=c(n_features,n_features,n_subj))
+i <- j <- k <- 1
+for (m in all_haxby_rsa_mats){
+  if (m$method == "naive"){
+    rsa_mats_naive[,,i] <- m$C
+    i <- i + 1
+  } else if(m$method == "brsa"){
+  rsa_mats_brsa[,,j] <- m$C
+    j <- j + 1
+} else if(m$method == "mnrsa"){
+  rsa_mats_mnrsa[,,k] <- m$C
+    k <- k + 1
+  }
+}
+
+grandmean_naive <- apply(rsa_mats_naive, c(1,2), mean)
+grandmean_brsa <- apply(rsa_mats_brsa, c(1,2), mean)
+grandmean_mnrsa <- apply(rsa_mats_mnrsa, c(1,2), mean)
+grandmean_naive_long <- melt(grandmean_naive)
+grandmean_brsa_long <- melt(grandmean_brsa)
+grandmean_mnrsa_long <- melt(grandmean_mnrsa)
+
+p <- ggplot(grandmean_naive_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, Haxby")
+p
+p <- ggplot(grandmean_brsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="BRSA average matrix, Haxby")
+p
+p <- ggplot(grandmean_mnrsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="MN-RSA average matrix, Haxby")
+p
+```
+
+```{r}
+n_subj <- 6
+tril_naive <- c()
+tril_brsa <- c()
+tril_mnrsa <- c()
+for (i in 1:n_subj){
+  tril_naive <- cbind(tril_naive, rsa_mats_naive[,,i][lower.tri(rsa_mats_naive[,,i])])
+tril_brsa <- cbind(tril_brsa, rsa_mats_brsa[,,i][lower.tri(rsa_mats_brsa[,,i])])
+  tril_mnrsa <- cbind(tril_mnrsa, rsa_mats_mnrsa[,,i][lower.tri(rsa_mats_mnrsa[,,i])])
+}
+tril_naive <- melt(tril_naive)
+colnames(tril_naive) <- c("elem", "subject", "correlation")
+tril_brsa <- melt(tril_brsa)
+colnames(tril_brsa) <- c("elem", "subject", "correlation")
+tril_mnrsa <- melt(tril_mnrsa)
+colnames(tril_mnrsa) <- c("elem", "subject", "correlation")
+tril_naive$method <-  "naive"
+tril_brsa$method <-  "brsa"
+tril_mnrsa$method <-  "mnrsa"
+tril_all <- rbind(tril_naive, tril_brsa, tril_mnrsa)
+p <- ggplot(tril_all, aes(x=method, y=correlation)) +geom_jitter(alpha=0.5) + geom_violin(alpha=0.5) 
+p
+```
