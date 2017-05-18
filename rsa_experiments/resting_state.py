@@ -5,7 +5,7 @@ import numpy as np
 from run_rsa import run_experiment
 
 input_path = '/home/ms44/nips2017_data/resting_state'
-outfile_template = '/home/ms44/nips2017_data/resting_state/results/results_%s_s%i'
+outfile_path = '/home/ms44/nips2017_data/resting_state/results/'
 
 if __name__ == "__main__":
 
@@ -20,7 +20,8 @@ if __name__ == "__main__":
 
     runPars = OrderedDict([
         ('method', ['naive','brsa','mnrsa']),
-        ('subj_num',  np.arange(29))])
+        ('subj_num',  np.arange(29)), 
+        ('n_nureg',  [10, 20, 50])])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     print("Doing Params %s to %s (inclusive)" % (start, end-1))
 
     for parnum in range(start, end):
-        run_experiment(allpar[parnum], input_path, outfile_template)
+        mypar = allpar[parnum]
+        run_experiment(allpar[parnum], input_path, outfile_path)
 
     print("Done!")

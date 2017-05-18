@@ -20,7 +20,8 @@ if __name__ == "__main__":
 
     runPars = OrderedDict([
         ('method', ['naive','brsa','mnrsa']),
-        ('subj_num',  np.arange(6))])
+        ('subj_num',  np.arange(6)),
+        ('n_nureg',  [10, 20, 50])])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
