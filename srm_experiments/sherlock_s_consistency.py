@@ -3,7 +3,7 @@ import scipy.io
 import os
 import numpy as np
 from pathlib import Path
-import models_loo_reconstruction as models
+import models_s_consistency as models
 import logging
 import pandas as pd
 from collections import OrderedDict
@@ -28,7 +28,8 @@ def run_experiment(par):
 
     return {'model': par['model'],
             'features': par['features'],
-            'cnorm': consistency_norm}
+            'cnorm': consistency_norm, 
+            'fold': par['fold']}
 
 if __name__ == "__main__":
 
@@ -43,7 +44,8 @@ if __name__ == "__main__":
 
     runPars = OrderedDict([
         ('model', models.models),
-        ('features',  [10, 30, 50])])
+        ('features',  [10, 30, 50]),
+        ('fold'), np.arange(10)])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
