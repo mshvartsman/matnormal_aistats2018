@@ -57,7 +57,7 @@ def run_experiment(par, input_path, outfile_path):
                                 space_noise_cov=spacecov_model,
                                 optimizer='L-BFGS-B', n_nureg=n_nureg)
         model.fit(data.T, design)
-        U = m.U_
+        U = model.U_
         C = model.C_
 
     savemat(fname, {'C':C,'U':U,'method':par['method'], 'subject':par['subj_num']})
