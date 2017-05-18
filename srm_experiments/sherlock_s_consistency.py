@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     for parnum in range(start, end):
         mypar = allpar[parnum]        
-        fname = '%s/results_s_consistency_%s_%ifeatures.csv' % (outfile_path, mypar['model'], mypar['features'])
+        fname = '%s/results_s_consistency_%s_%ifeatures_fold%i.csv' % (outfile_path, mypar['model'], mypar['features'], mypar['fold'])
         if Path(fname).exists(): 
             print("Found %s, skipping" % fname)
             continue
