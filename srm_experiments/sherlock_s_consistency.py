@@ -10,11 +10,11 @@ from collections import OrderedDict
 from itertools import product
 logging.basicConfig(level=logging.INFO)
 
-input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
-outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results_splits'
+# input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
+# outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results_splits'
 
-# input_path = '/home/ms44/nips2017_data/sherlock'
-# outfile_path = '/home/ms44/nips2017_data/sherlock/results_loo_recon'
+input_path = '/home/ms44/nips2017_data/sherlock'
+outfile_path = '/home/ms44/nips2017_data/sherlock/results_splits'
 # par={'model':'srm','features':10}
 
 def run_experiment(par):
