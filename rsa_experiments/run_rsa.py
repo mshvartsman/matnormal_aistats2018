@@ -52,7 +52,7 @@ def run_experiment(par, input_path, outfile_path):
         spacecov_model = CovDiagonal(size=n_V)
         timecov_model = CovAR1(size=n_T)
         # n_nureg = design.shape[1] // 3
-        n_nureg = par['n_ureg']
+        n_nureg = par['n_nureg']
         model = MatnormBRSA(time_noise_cov=timecov_model,
                                 space_noise_cov=spacecov_model,
                                 optimizer='L-BFGS-B', n_nureg=n_nureg)
