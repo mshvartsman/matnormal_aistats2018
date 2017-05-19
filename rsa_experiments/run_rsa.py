@@ -19,7 +19,7 @@ def run_experiment(par, input_path, outfile_path):
 
     data = mat['fmri'][0][par['subj_num']]
 
-    fname = "%s/results_%s_s%i.mat" % (outfile_path, par['method'], par['subj_num'])
+    fname = "%s/results_%s_s%i_%inureg.mat" % (outfile_path, par['method'], par['subj_num'], par['n_nureg'])
 
     if Path(fname).exists():
         return
@@ -51,8 +51,8 @@ def run_experiment(par, input_path, outfile_path):
         n_V, n_T = data.shape
         spacecov_model = CovDiagonal(size=n_V)
         timecov_model = CovAR1(size=n_T)
-        # ballpark nureg: not as many as conditions, but a few
-        n_nureg = design.shape[1] // 3
+        # n_nureg = design.shape[1] // 3
+        n_nureg = par['n_ureg']
         model = MatnormBRSA(time_noise_cov=timecov_model,
                                 space_noise_cov=spacecov_model,
                                 optimizer='L-BFGS-B', n_nureg=n_nureg)

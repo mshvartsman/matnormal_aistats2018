@@ -19,7 +19,8 @@ if __name__ == "__main__":
     print("Job %s of %s reporting in!" % (myID, totalIDs))
 
     runPars = OrderedDict([
-        ('method', ['naive','brsa','mnrsa']),
+        ('n_nureg', [30, 50])
+        ('method', ['mnrsa']),
         ('subj_num',  np.arange(29))])
 
     # cartesian over param settings
