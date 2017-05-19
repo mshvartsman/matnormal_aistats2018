@@ -14,9 +14,14 @@ models = ['srm',
           'pca']
           # 'dpmnsrm_ecme']
 
+# def norm_from_ortho(s1, s2):
+#     R = np.linalg.lstsq(s1.T,s2.T)[0]
+#     return np.linalg.norm(R.T @ R - np.eye(R.shape[0]))
+
+
 def norm_from_ortho(s1, s2):
     R = np.linalg.lstsq(s1.T,s2.T)[0]
-    return np.linalg.norm(R.T @ R - np.eye(R.shape[0]))
+    return np.linalg.norm(np.abs(np.linalg.eigvals(R))-1)
 
 
 def srm(train_data, n_features):
