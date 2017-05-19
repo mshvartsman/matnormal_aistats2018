@@ -39,9 +39,9 @@ def ica(train_data, test_data, n_features):
     model.fit(np.reshape(train_data, (n*v, t)).T)
     # transform will give us all the shared timecourse, we want distinct ones in this step, so:
     w = model.components_.T.reshape(n,v,n_features)
-    projected_data = np.zeros((n, n_features, test_data[0].shape[1]))
+    projected_data = list()
     for subject in range(n):
-        projected_data[subject] = stats.zscore(w[subject].T @ test_data[subject], axis=1, ddof=1)
+        projected_data.append(stats.zscore(w[subject].T @ test_data[subject], axis=1, ddof=1))
 
     return projected_data
 
@@ -56,9 +56,9 @@ def pca(train_data, test_data, n_features):
     model.fit(np.reshape(train_data, (n*v, t)).T)
     # transform will give us all the shared timecourse, we want distinct ones in this step, so:
     w = model.components_.T.reshape(n,v,n_features)
-    projected_data = np.zeros((n, n_features, test_data[0].shape[1]))
+    projected_data = list()
     for subject in range(n):
-        projected_data[subject] = stats.zscore(w[subject].T @ test_data[subject], axis=1, ddof=1)
+        projected_data.append(stats.zscore(w[subject].T @ test_data[subject], axis=1, ddof=1))
 
     return projected_data
 
