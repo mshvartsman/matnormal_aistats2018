@@ -2,6 +2,7 @@ from brainiak.funcalign.srm import SRM
 from brainiak.matnormal.dpmnsrm import DPMNSRM
 from brainiak.matnormal.covs import CovFullRankCholesky, CovAR1, CovDiagonal
 from scipy import stats
+import numpy as np
 from sklearn.decomposition import FastICA, PCA
 
 
