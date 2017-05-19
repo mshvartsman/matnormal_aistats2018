@@ -1,6 +1,7 @@
 from brainiak.funcalign.srm import SRM
 from brainiak.matnormal.dpmnsrm import DPMNSRM
 from brainiak.matnormal.covs import CovFullRankCholesky, CovAR1, CovDiagonal
+from sklearn.decomposition import FastICA, PCA
 from scipy import stats
 import numpy as np
 
@@ -8,7 +9,9 @@ import numpy as np
 # ECME not done for DPSRM since all updates are analytic
 models = ['srm',
           'dpsrm_ecm',
-          'dpmnsrm_ecm']
+          'dpmnsrm_ecm',
+          'ica',
+          'pca']
           # 'dpmnsrm_ecme']
 
 def norm_from_ortho(s1, s2):
@@ -74,3 +77,45 @@ def dpmnsrm_ecm(train_data, n_features):
     model1.fit(dset1, max_iter=15)
     model2.fit(dset2, max_iter=15)
     return norm_from_ortho(model1.s_, model2.s_)
+
+def ica(train_data, n_features):
+    n, v, t = len(train_data), train_data[0].shape[0],  train_data[0].shape[1]
+    # Z-score the data
+    n = len(train_data)
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
+
+    all_subj = np.arange(n)
+    np.random.shuffle(all_subj)
+
+    model1 = FastICA(n_components=n_features)
+    model2 = FastICA(n_components=n_features)
+
+    dset1 = train_data[all_subj[:n//2],:,:]
+    dset2 = train_data[all_subj[n//2:],:,:]
+
+    s1 = model1.fit_transform(dset1.reshape(n//2*v,t).T).T
+    s2 = model2.fit_transform(dset2.reshape(n//2*v,t).T).T
+
+    return norm_from_ortho(s1, s2)
+
+def pca(train_data, n_features):
+    n, v, t = len(train_data), train_data[0].shape[0],  train_data[0].shape[1]
+    # Z-score the data
+    n = len(train_data)
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
+
+    all_subj = np.arange(n)
+    np.random.shuffle(all_subj)
+
+    model1 = PCA(n_components=n_features)
+    model2 = PCA(n_components=n_features)
+
+    dset1 = train_data[all_subj[:n//2],:,:]
+    dset2 = train_data[all_subj[n//2:],:,:]
+
+    s1 = model1.fit_transform(dset1.reshape(n//2*v,t).T).T
+    s2 = model2.fit_transform(dset2.reshape(n//2*v,t).T).T
+
+    return norm_from_ortho(s1, s2)

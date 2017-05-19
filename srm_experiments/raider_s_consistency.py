@@ -50,10 +50,10 @@ if __name__ == "__main__":
 
     print("Job %s of %s reporting in!" % (myID, totalIDs))
 
-    runPars = OrderedDict([
-        ('model', models.models),
+    runPars = OrderedDict([('model', ['ica','pca']),
+        # ('model', models.models),
         ('features',  [10, 30, 50]),
-        ('fold', np.arange(20,50))])
+        ('fold', np.arange(40))])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # mypar = allpar[start:end]
 
     for parnum in range(start, end):
-        mypar = allpar[parnum]        
+        mypar = allpar[parnum] 
         fname = '%s/results_s_consistency_%s_%ifeatures_fold%i.csv' % (outfile_path, mypar['model'], mypar['features'], mypar['fold'])
         if Path(fname).exists(): 
             print("Found %s, skipping" % fname)

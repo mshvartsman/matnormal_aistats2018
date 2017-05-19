@@ -15,8 +15,8 @@ input_path = '/home/ms44/nips2017_data/raider'
 outfile_path = '/home/ms44/nips2017_data/raider/results'
 
 # input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider'
-# outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results_%i.csv'
-
+# outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/raider/results'
+# par = {'model':'ica', 'n_features':10}
 def run_experiment(par):
     model = getattr(models, par['model'])
     

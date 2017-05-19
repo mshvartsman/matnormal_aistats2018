@@ -16,7 +16,7 @@ input_path = '/home/ms44/nips2017_data/sherlock'
 outfile_path = '/home/ms44/nips2017_data/sherlock/results'
 
 # input_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock'
-# outfile_template = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results_%i.csv'
+# outfile_path = '/mnt/jukebox/pniintel/cohen/ms44/nips2017_data/sherlock/results'
 
 def run_experiment(par):
     model = getattr(models, par['model'])
