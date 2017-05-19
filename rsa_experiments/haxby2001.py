@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print("Job %s of %s reporting in!" % (myID, totalIDs))
 
     runPars = OrderedDict([
-        ('method', ['naive','brsa','mnrsa']),
+        ('method', ['mnrsa']),
         ('subj_num',  np.arange(6)),
         ('n_nureg',  [30, 50])])
 
