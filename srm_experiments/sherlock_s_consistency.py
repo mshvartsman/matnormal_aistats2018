@@ -45,7 +45,7 @@ if __name__ == "__main__":
     runPars = OrderedDict([
         ('model', models.models),
         ('features',  [10, 30, 50]),
-        ('fold', np.arange(10))])
+        ('fold', np.arange(20,50))])
 
     # cartesian over param settings
     allpar = [dict(parset) for parset in (zip(runPars.keys(), p)

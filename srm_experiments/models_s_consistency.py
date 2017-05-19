@@ -71,6 +71,6 @@ def dpmnsrm_ecm(train_data, n_features):
     dset1 = train_data[all_subj[:n//2],:,:]
     dset2 = train_data[all_subj[n//2:],:,:]
 
-    model1.fit(dset1)
-    model2.fit(dset2)
+    model1.fit(dset1, max_iter=15)
+    model2.fit(dset2, max_iter=15)
     return norm_from_ortho(model1.s_, model2.s_)
