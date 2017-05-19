@@ -7,19 +7,23 @@ output: html_notebook
 library(data.table)
 library(ggplot2)
 library(plyr)
+library(R.matlab)
+library(stringr)
+library(reshape2)
 ```
 
 # Data sources
 ```{r}
 result_folder_classification_raider <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/raider/results')
-
 result_folder_classification_sherlock <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/sherlock/results')
 
 result_folder_raider_loo <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/raider/results_loo_recon')
 result_folder_sherlock_loo <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/sherlock/results_loo_recon')
 
-result_folder_restingstate <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/resting_state/results')
+result_folder_raider_splits <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/raider/results_s_consistency')
+result_folder_sherlock_splits <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/sherlock/results_splits')
 
+result_folder_restingstate <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/resting_state/results')
 result_folder_haxby <- c('/Volumes/pniintel/cohen/ms44/nips2017_data/haxby2001/results')
 
 ```
@@ -33,16 +37,20 @@ names_from <- c("dpmnsrm_ecm",
 				"dpmnsrm_orthos_ecme",
 				"dpsrm_ecm",
 				"dpsrm_orthos_ecm",
-				"srm")
-names_to <- c("DP-MNSRM",
+				"srm",
+        "ica",
+        "pca")
+names_to <- c("MN-SRM",
 			 "DP-MNSRM (ECME)",
 			 "DP-MNSRM (Orth. S)",
 			 "DP-MNSRM (ECME, Orth. S)",
 			 "DP-SRM",
 			 "DP-SRM (Ortho. S)",
-			  "SRM")
+			  "SRM",
+        "ICA",
+        "PCA")
 
-include_models <- c('dpmnsrm_ecm', 'dpsrm_ecm', 'srm')
+include_models <- c('dpmnsrm_ecm', 'dpsrm_ecm', 'srm','ica')
 ```
 
 # SRM Classification
@@ -54,7 +62,7 @@ res_files_sherlock <- dir(result_folder_classification_sherlock, full.names=T, p
 res_raider <- rbindlist(llply(res_files_raider, fread))
 res_raider[,chance_level:=1/7]
 res_sherlock <- rbindlist(llply(res_files_sherlock, fread))
-res_sherlock[,chance_level:=1/49]
+res_sherlock[,chance_level:=1/50]
 res_raider[,experiment:="raider"]
 res_sherlock[,experiment:="sherlock"]
 allres <- rbind(res_raider, res_sherlock)
@@ -64,15 +72,16 @@ allres <- allres[model %in% include_models]
 allres[,n_subj:=NA][experiment=='sherlock',n_subj:=16][experiment=='raider',n_subj:=10]
 allres[,se_acc:=std_acc/sqrt(n_subj)]
 allres[,fancy_names:=mapvalues(model, names_from, names_to)]
+allres[,fancy_names:=factor(fancy_names, levels=c("ICA","PCA","DP-SRM","MN-SRM","SRM"))]
 
-p <- ggplot(allres, aes(x=factor(features), y=mean_acc, ymin=mean_acc-std_acc, ymax=mean_acc+std_acc, group=fancy_names, fill=fancy_names)) + geom_bar(stat="identity", position=position_dodge()) +
-	geom_linerange(position=position_dodge(width=0.9), colour="gray") + theme_bw(base_size=10) + 
+
+p <- ggplot(allres, aes(x=factor(features), y=mean_acc, ymin=mean_acc-se_acc, ymax=mean_acc+se_acc, group=fancy_names, fill=fancy_names)) + geom_bar(stat="identity", position=position_dodge()) +
+	geom_linerange(position=position_dodge(width=0.9), colour="gray") + theme_bw(base_size=12) + 
 	geom_hline(aes(yintercept=chance_level), linetype="dashed") + 
-	scale_fill_brewer("Method", type = "qual") + facet_wrap(~experiment, scales="free")
-	labs(x="Features", y="Accuracy", title="Classification performance") 
+	scale_fill_brewer("Method", type = "qual") + facet_wrap(~experiment, scales="free") + labs(x="Features", y="Accuracy", title="Classification performance")
 
 print(p)
-ggsave(filename="./classification.pdf", plot=p, width=4, height=5)
+ggsave(filename="./classification.pdf", plot=p, width=9, height=3)
 ```
 
 # SRM Reconstruction
@@ -88,127 +97,224 @@ res_sherlock_loo <- rbindlist(llply(res_files_sherlock_loo, fread))
 res_sherlock_loo[,experiment:='sherlock']
 res_loo <- rbind(res_raider_loo, res_sherlock_loo)
 res_loo[,fancy_names:=mapvalues(model, names_from, names_to)]
+res_loo[,fancy_names:=factor(fancy_names, levels=c("ICA","PCA","DP-SRM","MN-SRM","SRM"))]
+res_loo <- res_loo[model %in% include_models]
+
 
 p <- ggplot(res_loo, aes(x=factor(features), y=root_mse, group=fancy_names, colour=fancy_names)) +
 	  stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.9)) +
-	  scale_color_brewer("Method", type = "qual") + labs(x="Features", y="Root MSE", title="Reconstruction performance")  + facet_wrap(~experiment)+ theme_bw(base_size=12)
+	  scale_color_brewer("Method", type = "qual", palette="Dark2") + labs(x="Features", y="Root MSE", title="Reconstruction performance")  + facet_wrap(~experiment)+ theme_bw(base_size=12)
 p
-ggsave(filename="./reconstruction_root_mse.pdf", plot=p, width=4, height=5)
+ggsave(filename="./reconstruction_root_mse.pdf", plot=p, width=9, height=3)
+
 ```
 
 ```{r}
 p <- ggplot(res_loo, aes(x=factor(features), y=relative_mse, group=fancy_names, colour=fancy_names)) +
-	  stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.9)) +
-	  scale_color_brewer("Method", type = "qual") + labs(x="Features", y="Relative MSE", title="Reconstruction performance") + facet_wrap(~experiment) + theme_bw(base_size=12)
+	  stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.2)) +
+  stat_summary(fun.data=mean_se, geom="line", position=position_dodge(width=0.2), alpha=0.5) +
+	  scale_color_brewer("Method", type = "qual", palette="Dark2") + labs(x="Features", y="Relative MSE", title="Reconstruction performance") + facet_wrap(~experiment) + theme_bw(base_size=12) 
 p
-ggsave(filename="./reconstruction_relative_mse.pdf", plot=p, width=4, height=5)
+ggsave(filename="./reconstruction_relative_mse.pdf", plot=p, width=9, height=3)
 ```
+
+# SRM Splits
+
+```{r}
+res_files_raider_splits <- dir(result_folder_raider_splits, full.names=T, pattern="*.csv")
+res_files_sherlock_splits <- dir(result_folder_sherlock_splits, full.names=T, pattern="*.csv")
+
+res_raider_splits <- rbindlist(llply(res_files_raider_splits, fread))
+res_raider_splits[,experiment:='raider']
+res_sherlock_splits <- rbindlist(llply(res_files_sherlock_splits, fread))
+res_sherlock_splits[,experiment:='sherlock']
+res_splits <- rbind(res_raider_splits, res_sherlock_splits)
+res_splits[,fancy_names:=mapvalues(model, names_from, names_to)]
+res_splits[,fancy_names:=factor(fancy_names, levels=c("ICA","PCA","DP-SRM","MN-SRM","SRM"))]
+res_splits <- res_splits[model %in% include_models]
+
+p <- ggplot(res_splits, aes(x=factor(features), y=cnorm, group=fancy_names, colour=fancy_names)) +
+    stat_summary(fun.data=mean_se, geom="pointrange", position=position_dodge(width=0.2)) +
+  stat_summary(fun.data=mean_se, geom="line", position=position_dodge(width=0.2), alpha=0.5) +
+    scale_color_brewer("Method", type = "qual", palette="Dark2") + labs(x="Features", y="Rotation norm", title="S Consistency") + facet_wrap(~experiment) + theme_bw(base_size=12) + scale_y_log10()
+p
+
+p <- ggplot(res_splits, aes(x=fancy_names, y=cnorm, group=fancy_names, colour=fancy_names)) +
+    scale_color_brewer("Method", type = "qual", palette="Dark2") + labs(x="Features", y="Rotation norm", title="Rotation norm") + facet_grid(features~experiment) + theme_bw(base_size=12) + geom_boxplot(width=0.5, position=position_dodge(width=0.9))
+p
+
+```
+
 
 # RSA on null (resting state)
 
 ```{r}
 res_files_rsanull <- dir(result_folder_restingstate, full.names=T, pattern="*.mat")
-all_null_rsa_mats <- llply(res_files_rsanull, readMat)
+res_info_null <- str_match(res_files_rsanull, ".*results_(.*)_s(\\d+)_?(\\d?\\d?).*\\.mat")
+# the original run had 15 nureg, we didn't record it
+res_info_null[,4][res_info[,4] ==""] <- 15
+res_info_null <- data.frame(res_info)
+colnames(res_info_null) <- c("filename", "method", "subject", "n_nureg")
 ```
 
+Preprocess for things we need:
+
 ```{r}
-rsa_mats_naive <- array(dim=c(16,16,29))
-rsa_mats_brsa <-array(dim=c(16,16,29))
-rsa_mats_mnrsa <- array(dim=c(16,16,29))
-i <- j <- k <- 1
-for (m in all_null_rsa_mats){
-  if (m$method == "naive"){
-    rsa_mats_naive[,,i] <- m$C
-    i <- i + 1
-  } else if(m$method == "brsa"){
-  rsa_mats_brsa[,,j] <- m$C
-    j <- j + 1
-} else if(m$method == "mnrsa"){
-  rsa_mats_mnrsa[,,k] <- m$C
-    k <- k + 1
+processRow <- function(res_row){
+  res <- readMat(res_row$filename)
+  if(is.null(res$U)){
+    return(NULL)
   }
+  out <- melt(res$C)
+  colnames(out) <- c("row","col","corr")
+  Umat <- melt(res$U)
+  out$cov <- Umat$value
+  out$method <- res_row$method
+  out$subject <- res_row$subject
+  out$n_nureg <- res_row$n_nureg
+  return(out)
 }
 
-grandmean_naive <- apply(rsa_mats_naive, c(1,2), mean)
-grandmean_brsa <- apply(rsa_mats_brsa, c(1,2), mean)
-grandmean_mnrsa <- apply(rsa_mats_mnrsa, c(1,2), mean)
-grandmean_naive_long <- melt(grandmean_naive)
-grandmean_brsa_long <- melt(grandmean_brsa)
-grandmean_mnrsa_long <- melt(grandmean_mnrsa)
+allRes_null <- alply(res_info_null, 1, processRow)
+allRes_null <- rbindlist(allRes_null)
 
-p <- ggplot(grandmean_naive_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, resting state")
-p
-p <- ggplot(grandmean_brsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="BRSA average matrix, resting state")
-p
-p <- ggplot(grandmean_mnrsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="MN-RSA average matrix, resting state")
-p
-```
+n_features_null <- length(unique(allRes_null$row))
 
-```{r}
-n_subj <- 29
-tril_naive <- c()
-tril_brsa <- c()
-tril_mnrsa <- c()
-for (i in 1:n_subj){
-  tril_naive <- cbind(tril_naive, rsa_mats_naive[,,i][lower.tri(rsa_mats_naive[,,i])])
-tril_brsa <- cbind(tril_brsa, rsa_mats_brsa[,,i][lower.tri(rsa_mats_brsa[,,i])])
-  tril_mnrsa <- cbind(tril_mnrsa, rsa_mats_mnrsa[,,i][lower.tri(rsa_mats_mnrsa[,,i])])
+grandMeanRsa_null <- allRes_null[,data.table(cor=mean(corr), cov=mean(cov)),by="row,col,method,n_nureg"]
+# now make a correlation
+makeCorr <- function(covlong){
+  covmat <- as.matrix(dcast(covlong, row~col))[,-1]
+  corrlong <- melt(cov2cor(covmat))
+  colnames(corrlong) <- c("row","col","corr_from_cov")
+  return(merge(covlong, corrlong, by=c("row","col")))
 }
-tril_naive <- melt(tril_naive)
-colnames(tril_naive) <- c("elem", "subject", "correlation")
-tril_brsa <- melt(tril_brsa)
-colnames(tril_brsa) <- c("elem", "subject", "correlation")
-tril_mnrsa <- melt(tril_mnrsa)
-colnames(tril_mnrsa) <- c("elem", "subject", "correlation")
-tril_naive$method <-  "naive"
-tril_brsa$method <-  "brsa"
-tril_mnrsa$method <-  "mnrsa"
-tril_all <- rbind(tril_naive, tril_brsa, tril_mnrsa)
-p <- ggplot(tril_all, aes(x=method, y=correlation)) +geom_jitter(alpha=0.1) + geom_violin(alpha=0.5)+ labs(title="Distr. of correlations (resting state)")
+
+grandMeanRsa_null <- rbindlist(dlply(grandMeanRsa_null, .(method), makeCorr))
+setkey(grandMeanRsa_null, "row","col", "method","n_nureg")
+setnames(grandMeanRsa_null,c("cor","cov"), c("cor_grandmean", "cov_grandmean"))
+setkey(allRes_null, "row", "col", "method", "n_nureg")
+allRes_null <- allRes_null[grandMeanRsa_null]
+
+p1 <- ggplot(grandMeanRsa_null[method=="naive" & n_nureg==15], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, null") + scale_y_reverse() + facet_wrap(~n_nureg)
+p2 <- ggplot(grandMeanRsa_null[method=="brsa" & n_nureg==15], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="BRSA average matrix, null") + scale_y_reverse()+ facet_wrap(~n_nureg)
+p3 <- ggplot(grandMeanRsa_null[method=="mnrsa" & n_nureg==15], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="MN-RSA average matrix, null") + scale_y_reverse()+ facet_wrap(~n_nureg)
+grid.arrange(p1, p2, p3, ncol=3)
+
+p <- ggplot(grandMeanRsa_null[(n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = corr_from_cov)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_grid(~method)+ scale_y_reverse()
 p
+
+p <- ggplot(grandMeanRsa_null[(n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cor_grandmean)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_grid(~method)+ scale_y_reverse()
+p
+
+p <- ggplot(allRes_null[(n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_grid(subject~method)+ scale_y_reverse()
+
+ggsave(filename="./rsa_nullcorr.pdf", plot=p, width=9, height=3)
+
+p <- ggplot(allRes_null[(method=="mnrsa" & n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="MN-RSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+# p
+ggsave(filename="./mnrsa_nullcorr_allsubj.pdf", plot=p, width=7, height=7)
+
+p <- ggplot(allRes_null[(method=="brsa" & n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="BRSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+# p
+ggsave(filename="./brsa_nullcorr_allsubj.pdf", plot=p, width=7, height=7)
+
+p <- ggplot(allRes_null[(method=="naive" & n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+# p
+ggsave(filename="./naive_nullcorr_allsubj.pdf", plot=p , width=7, height=7)
+
+p1 <- ggplot(allRes_null[(method=="naive" & n_nureg==15 & subject %in% c(1,2))], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA") + facet_wrap(~subject, ncol=1)+ scale_y_reverse() + theme_bw(base_size=10) + theme(legend.position="bottom")
+
+p2 <- ggplot(allRes_null[(method=="brsa" & n_nureg==15 & subject %in% c(1,2))], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="BRSA") + facet_wrap(~subject, ncol=1)+ scale_y_reverse() + theme_bw(base_size=10) + theme(legend.position="bottom")
+
+p3 <- ggplot(allRes_null[(method=="mnrsa" & n_nureg==15 & subject %in% c(1,2))], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="MN-RSA") + facet_wrap(~subject, ncol=1)+ scale_y_reverse() + theme_bw(base_size=10) + theme(legend.position="bottom")
+pdf('rsa_null.pdf', width=9, height=5)
+grid.arrange(p1, p2, p3, ncol=3, top="Example subjects under null")
+dev.off()
+
 ```
+
 
 # RSA on signal (Haxby)
 
 ```{r}
 res_files_haxby <- dir(result_folder_haxby, full.names=T, pattern="*.mat")
-all_haxby_rsa_mats <- llply(res_files_haxby, readMat)
+res_info_haxby <- str_match(res_files_haxby, ".*results_(.*)_s(\\d+)_?(\\d?\\d?).*\\.mat")
+# the original run had 15 nureg, we didn't record it
+res_info_haxby[,4][res_info_haxby[,4] ==""] <- 15
+res_info_haxby <- data.frame(res_info_haxby)
+colnames(res_info_haxby) <- c("filename", "method", "subject", "n_nureg")
 ```
 
 ```{r}
-n_subj <- 6
-n_features <- 8
+allRes_haxby <- alply(res_info_haxby, 1, processRow)
+allRes_haxby <- rbindlist(allRes_haxby)
+n_features <- length(unique(allRes_haxby$row))
 
-rsa_mats_naive <- array(dim=c(n_features,n_features,n_subj))
-rsa_mats_brsa <-array(dim=c(n_features,n_features,n_subj))
-rsa_mats_mnrsa <- array(dim=c(n_features,n_features,n_subj))
-i <- j <- k <- 1
-for (m in all_haxby_rsa_mats){
-  if (m$method == "naive"){
-    rsa_mats_naive[,,i] <- m$C
-    i <- i + 1
-  } else if(m$method == "brsa"){
-  rsa_mats_brsa[,,j] <- m$C
-    j <- j + 1
-} else if(m$method == "mnrsa"){
-  rsa_mats_mnrsa[,,k] <- m$C
-    k <- k + 1
-  }
+grandMeanRsa_haxby <- allRes_haxby[subject!=2,data.table(cor=mean(corr), cov=mean(cov)),by="row,col,method,n_nureg"]
+# now make a correlation
+makeCorr <- function(covlong){
+  covmat <- as.matrix(dcast(covlong, row~col))[,-1]
+  corrlong <- melt(cov2cor(covmat))
+  colnames(corrlong) <- c("row","col","corr_from_cov")
+  return(merge(covlong, corrlong, by=c("row","col")))
 }
 
-grandmean_naive <- apply(rsa_mats_naive, c(1,2), mean)
-grandmean_brsa <- apply(rsa_mats_brsa, c(1,2), mean)
-grandmean_mnrsa <- apply(rsa_mats_mnrsa, c(1,2), mean)
-grandmean_naive_long <- melt(grandmean_naive)
-grandmean_brsa_long <- melt(grandmean_brsa)
-grandmean_mnrsa_long <- melt(grandmean_mnrsa)
+grandMeanRsa_haxby <- rbindlist(dlply(grandMeanRsa_haxby, .(method), makeCorr))
+setkey(grandMeanRsa_haxby, "row","col", "method", "n_nureg")
+setnames(grandMeanRsa_haxby,c("cor","cov"), c("cor_grandmean", "cov_grandmean"))
+setkey(allRes_haxby, "row", "col", "method", "n_nureg")
+allRes_haxby <- allRes_haxby[grandMeanRsa_haxby]
 
-p <- ggplot(grandmean_naive_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, Haxby")
+p1 <- ggplot(grandMeanRsa_haxby[method=="naive"], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="Naive RSA average matrix, haxby") + scale_y_reverse() + facet_wrap(~n_nureg)
+p2 <- ggplot(grandMeanRsa_haxby[method=="brsa"], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="BRSA average matrix, haxby") + scale_y_reverse()+ facet_wrap(~n_nureg)
+p3 <- ggplot(grandMeanRsa_haxby[method=="mnrsa"], aes(col, row)) + geom_tile(aes(fill = cov_grandmean)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="MN-RSA average matrix, haxby") + scale_y_reverse()+ facet_wrap(~n_nureg)
+grid.arrange(p1, p2, p3, ncol=3)
+
+p <- ggplot(grandMeanRsa_haxby, aes(col, row)) + geom_tile(aes(fill = cor_grandmean)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, haxby") + facet_grid(method~n_nureg)+ scale_y_reverse()
 p
-p <- ggplot(grandmean_brsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="BRSA average matrix, Haxby")
+
+p <- ggplot(grandMeanRsa_haxby, aes(col, row)) + geom_tile(aes(fill = cor)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, haxby") + facet_grid(method~.)+ scale_y_reverse()
 p
-p <- ggplot(grandmean_mnrsa_long, aes(Var1, Var2)) + geom_tile(aes(fill = value)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green"))+ labs(x="",y="", title="MN-RSA average matrix, Haxby")
+
+p <- ggplot(grandMeanRsa_haxby[(n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cor_grandmean)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, haxby") + facet_grid(~method)+ scale_y_reverse()
 p
+ggsave(filename="./rsa_haxby.pdf", plot=p, width=9, height=3)
+
+
+p <- ggplot(grandMeanRsa_haxby[(n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = corr_from_cov)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, haxby") + facet_grid(~method)+ scale_y_reverse()
+p
+
+
+
+p <- ggplot(allRes_haxby[(method=="mnrsa" & n_nureg==15  & subject != 2)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Correlation", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+p
+
+p <- ggplot(allRes_haxby[(method=="brsa" & n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+p
+
+p <- ggplot(allRes_haxby[(method=="naive" & n_nureg==15)], aes(col, row)) + geom_tile(aes(fill = cov)) + scale_fill_gradient2("Covariance", low=scales::muted("red"), high=scales::muted("green")) + labs(x="",y="", title="RSA average matrix, null") + facet_wrap(~subject)+ scale_y_reverse()
+p
+
+allRes_haxby[,corDeviation:=(corr-cor_grandmean)^2]
+allRes_haxby[,corDeviation_gm:=(corr-corr_from_cov)^2]
+allRes_haxby[,covDeviation:=((cov-cov_grandmean)^2]
+
+allRes_haxby[(tril_idx_flat),sum(corDeviation),by="method"]
+allRes_haxby[(tril_idx_flat),sum(covDeviation),by="method"]
+allRes_haxby[(tril_idx_flat),sum(corDeviation_gm),by="method"]
+
+tril_idx_flat <- as.data.table(melt(lower.tri(diag(n_features))))
+setnames(tril_idx_flat, colnames(tril_idx_flat), c("row","col","is_lower_tri"))
+setkey(tril_idx_flat, "row", "col")
+
+
+allRes_haxby_tril <- allRes_haxby[tril_idx_flat]
+p <- ggplot(allRes_haxby[(is_lower_tri) & subject != 2], aes(x=method, y=cov)) + geom_jitter(alpha=0.1) + geom_violin(alpha=0.5) + labs(x="",y="", title="covs")
+p
+
+p <- ggplot(allRes_haxby[(is_lower_tri) & subject != 2], aes(x=method, y=corr)) + geom_jitter(alpha=0.1) + geom_violin(alpha=0.5) + labs(x="",y="", title="corr")
+p
+
 ```
 
 ```{r}
