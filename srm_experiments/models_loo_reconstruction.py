@@ -9,7 +9,8 @@ import numpy as np
 # ECME not done for DPSRM since all updates are analytic
 models = ['srm',
           'dpsrm_ecm',
-          'dpmnsrm_ecm']
+          'dpmnsrm_ecm',
+          'pca','ica']
           # 'dpmnsrm_ecme']
 
 def dpmnsrm_wposterior(X, model):
