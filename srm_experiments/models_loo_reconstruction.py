@@ -93,6 +93,33 @@ def dpmnsrm_ecme(train_data, test_data, n_features):
 
     return rmse(w_new.dot(model.s_), test_data), relative_mse(w_new.dot(model.s_), test_data)
 
+
+def pca(train_data, test_data, n_features):
+    # Z-score the data
+    n, v, t = len(train_data), train_data[0].shape[0],  train_data[0].shape[1]
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
+
+    model = PCA(n_components=n_features)
+    s = model.fit_transform(np.reshape(train_data, (n*v, t)).T)
+    w_new = np.linalg.lstsq(s, test_data.T)[0].T
+
+    return rmse(w_new.dot(s.T), test_data), relative_mse(w_new.dot(s.T), test_data)
+
+
+def ica(train_data, test_data, n_features):
+    # Z-score the data
+    n, v, t = len(train_data), train_data[0].shape[0],  train_data[0].shape[1]
+    for subject in range(n):
+        train_data[subject] = stats.zscore(train_data[subject], axis=1, ddof=1)
+
+    model = FastICA(n_components=n_features)
+    s = model.fit_transform(np.reshape(train_data, (n*v, t)).T)
+    w_new = np.linalg.lstsq(s, test_data.T)[0].T
+
+    return rmse(w_new.dot(s.T), test_data), relative_mse(w_new.dot(s.T), test_data)
+
+
 # def hyperalignment(train_data, test_data, n_features):
 #     from mvpa2.suite import Hyperalignment
 #     from mvpa2.datasets import Dataset
