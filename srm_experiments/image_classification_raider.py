@@ -97,8 +97,8 @@ if __name__ == "__main__":
 
     print("Job %s of %s reporting in!" % (myID, totalIDs))
 
-    runPars = OrderedDict([
-        ('model', models.models),
+    runPars = OrderedDict([('model', ['ica','pca']),
+        # ('model', models.models),
         ('features',  [10, 30, 50])])
 
     # cartesian over param settings
