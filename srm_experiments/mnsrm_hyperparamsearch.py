@@ -1,14 +1,9 @@
 ## heavily based on SRM brainiak example
 import scipy.io
-import os
 from sklearn.svm import NuSVC
 import numpy as np
-from pathlib import Path
-import models
+import tensorflow as tf
 import logging
-import pandas as pd
-from collections import OrderedDict
-from itertools import product
 from brainiak.matnormal.dpmnsrm import DPMNSRM
 from brainiak.matnormal.covs import CovIdentity, CovDiagonal, CovAR1#, CovIncompleteCholeskyPlusDiag
 from scipy import stats
@@ -57,6 +52,10 @@ def objective(x):
     model.fit(movie_data, max_iter=25, convergence_tol=1e-5)
     projected_data = model.transform(image_data)
     
+    # reset the graph so we don't run out of memory
+    model.sess.close()
+    tf.reset_default_graph()
+
     # if SRM does it maybe we do it too? still no idea why it should help
     for subject in range(n):
         projected_data[subject] = stats.zscore(projected_data[subject], axis=1, ddof=1)
